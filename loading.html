@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./css/reset.min.css">
+  <style>
+    .container {
+      margin: 20px auto;
+      width: 1000px;
+    }
+
+    .container .imgBox {
+      margin-bottom: 20px;
+      height: 300px;
+      background: url('img/default.gif') no-repeat center center #eee;
+    }
+
+    .container .imgBox img {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- <div class="imgBox">
+      <img src="" alt="" data-src="">
+    </div> -->
+  </div>
+  <script src="./js/jquery-1.11.3.min.js"></script>
+  <script>
+    $(function () {
+      let $container = $('.container'),
+        $imgList = null;
+      // 1. 绑定数据
+      ~ function () {
+        let str = ``;
+        for (let i = 0; i < 100; i++) {
+          let ran = Math.round(Math.random() * 3 + 1);
+          str +=
+            `<div class="imgBox">
+              <img src="" alt="" data-src="img/banner${ran}.jpg">
+            </div>`
+        }
+        $container.html(str);
+        $imgList = $container.find('img');
+      }()
+      // 2. 加载真实的图片
+      // lazyImg：单张图片延迟加载（传递给我谁，我就加载谁）
+      let lazyImg = curImg => {
+        // 将传进来的原生curImg对象转换为jq对象 (当前图片)
+        // 获取自定义属性上的真实的img路径
+        let $curImg = $(curImg),
+          trueImg = $curImg.attr('data-src');
+        // 创建一个临时存放图片的img，用来检测图片是否存在或者有无404错误可能
+        let tempImg = new Image();
+        tempImg.onload = () => {
+          // $curImg.attr('src', trueImg).css({
+          //   display: 'block'
+          // })
+          $curImg.attr('src', trueImg).stop().fadeIn(300);
+          tempImg = null;
+          curImg.isLoad = true; // 图片加载成功后，设置一个自定义属性存储当前图片已经加载了，后期不需要再加载
+        }
+        tempImg.src = trueImg;
+      }
+      // computedImg:计算哪张图片可以加载了
+      let computedImg = () => {
+        // 观察所有图片中谁能加载了，就执行lazyimg让其加载即可
+        $imgList.each((index, curImg) => {
+          // A:当前图片所在盒子的底边距离body偏移=当前盒子的上偏移+当前盒子本身的高度
+          // B:当前浏览器底部距离body偏移=一整屏幕的高度+滚动条的上偏移量
+          let $curImg = $(curImg),
+            $imgBox = $curImg.parent(),
+            A = $imgBox.offset().top + $imgBox.outerHeight(),
+            B = document.documentElement.scrollTop + document.documentElement.clientHeight;
+          if (A <= B) {
+            if (curImg.isLoad) {
+              return;
+            }
+            // 代表图片所在盒子呈现在视野中，开始加载真实的图片
+            lazyImg(curImg)
+          }
+        })
+      }
+      $(window).on('load scroll', computedImg)
+    })
+  </script>
+</body>
+
+</html>
